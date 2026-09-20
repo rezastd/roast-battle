@@ -25,22 +25,25 @@ To use another port: `PORT=3101 npm start`.
 
 ## Deploy to Vercel
 
-The project root for the Vercel app is `debate-arena/` (it holds
-`package.json`, `public/` and the `server.js` entrypoint).
+Live at https://roast-battle-rezast.vercel.app (project `rezast/roast-battle`).
 
-1. Push this repo to GitHub.
-2. In Vercel: **Add New → Project → Import** the repo, set **Root Directory**
-   to `debate-arena`, deploy. (`npm install` runs automatically for the one
-   dependency, `@upstash/redis`.)
-3. Add a Redis store (required for online rooms — serverless instances don't
+The repo root is the app root (`package.json`, `public/`, `server.js`), so
+**Root Directory stays blank**. With the repo connected (Settings → Git),
+pushes to `main` auto-deploy to production. From a checkout you can also run
+`vercel --prod` directly.
+
+First-time setup from scratch:
+
+1. `vercel login`, then from this directory: `vercel link`, `vercel --prod`.
+2. Add a Redis store (required for online rooms — serverless instances don't
    share memory). Either:
    - Vercel dashboard → **Storage → Create → KV**, connect it to the project
      (adds `KV_REST_API_URL` / `KV_REST_API_TOKEN` automatically), or
    - Create a free Redis at Upstash and add `UPSTASH_REDIS_REST_URL` /
      `UPSTASH_REDIS_REST_TOKEN` as project env vars.
-4. Add `TYPESAFE_API_KEY` as a project env var for live Jev judging
+3. Add `TYPESAFE_API_KEY` as a project env var for live Jev judging
    (without it, the demo judge runs).
-5. Redeploy. Play at `https://your-app.vercel.app` — no LAN needed.
+4. Redeploy. Play at the production URL — no LAN needed.
 
 Local runs always use in-memory rooms (right for one process) and never
 need `npm install` — even with KV vars in `.env`. Only real exported KV env
