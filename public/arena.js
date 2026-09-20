@@ -2,6 +2,7 @@
 // Loaded dynamically — if three.js or WebGL is unavailable the import fails
 // and the game falls back to 2D mode. Uses stable three.js core APIs only.
 import * as THREE from "three";
+import { sfx } from "./sfx.js";
 
 const SIDES = [
   { baseX: -2.6, facing: 1, rotY: Math.PI / 2, color: 0xff5a2a, name: "red" },
@@ -356,6 +357,8 @@ export async function initArena(canvas) {
 
   async function fireBall(A, B, spec) {
     const fizzle = spec.kind === "fizzle";
+    if (fizzle) sfx.fizzle();
+    else sfx.ball(spec.power);
     const color = fizzle ? 0x9a9a9a : A.color;
     const r = fizzle ? 0.14 : 0.2 + spec.power * 0.3;
     const ball = new THREE.Mesh(
@@ -406,6 +409,7 @@ export async function initArena(canvas) {
   }
 
   async function fireBeam(A, B, spec) {
+    sfx.beam();
     const from = handsOf(A);
     const to = chestOf(B);
     const dir = to.clone().sub(from);
@@ -481,6 +485,7 @@ export async function initArena(canvas) {
     chargeLight.position.copy(handPos);
     chargeLight.color.set(chargeColor);
     const orbR = fizzle ? 0.5 : 0.7 + spec.power * 0.9;
+    sfx.charge(fizzle ? 0.2 : spec.power);
     await tween(fizzle ? 260 : 480, (k) => {
       const s = Math.max(0.01, easeOut(k) * orbR);
       orb.scale.set(s, s, s);
@@ -497,6 +502,7 @@ export async function initArena(canvas) {
 
     // Impact.
     const fxColor = fizzle ? 0xbbbbbb : A.color;
+    sfx.impact(fizzle ? 0.12 : spec.power);
     flashAt(impactAt, fxColor, spec.power);
     shockwave(impactAt, fxColor, spec.power);
     burst(impactAt, fxColor, Math.round(8 + spec.power * 26), 2 + spec.power * 5);
@@ -517,6 +523,7 @@ export async function initArena(canvas) {
   api.knockout = async function knockout(side) {
     const f = fighters[side];
     f.ko = true;
+    sfx.bell();
     burst(chestOf(f), 0xcfc3ab, 12, 3);
     await tween(500, (k) => {
       const e = easeOut(k);

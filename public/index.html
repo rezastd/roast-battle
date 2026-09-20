@@ -19,6 +19,7 @@
       </div>
     </div>
     <div class="top-right">
+      <button id="muteBtn" type="button" class="mute-btn"></button>
       <div class="lang-toggle" role="group" aria-label="Language">
         <button id="langEn" type="button">EN</button>
         <button id="langId" type="button">ID</button>
@@ -50,7 +51,6 @@
         <button id="resumeBtn" type="button" class="btn ghost hidden"></button>
         <p id="homeErr" class="err hidden"></p>
         <p id="kvWarn" class="err hidden"></p>
-        <p class="hint"><span data-i18n="sameWifi"></span> <b id="lanUrl">…</b></p>
       </div>
       <div class="card rules">
         <h3 data-i18n="howTitle"></h3>
@@ -107,6 +107,10 @@
           <span id="argLabel"></span>
           <textarea id="argument" rows="6" maxlength="2000" data-i18n-ph="placeholder"></textarea>
         </label>
+        <div class="turn-feed">
+          <span id="charCount" class="hint">0 / 20</span>
+          <span id="submitErr" class="err hidden"></span>
+        </div>
         <div class="turn-foot">
           <span id="oppStatus" class="hint"></span>
           <button id="submitBtn" type="button" class="btn primary big" data-i18n="deliver"></button>

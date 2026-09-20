@@ -2,6 +2,7 @@
 // Home -> lobby -> battle <-> wait -> round -> over. Server is authoritative;
 // this client polls room state and renders. Each tab holds its own session.
 import { STRINGS, TOPICS, localizeFoul, localizeCrowd } from "./strings.js";
+import { sfx, isMuted, setMuted } from "./sfx.js";
 
 const $ = (id) => document.getElementById(id);
 const POLL_MS = 900;
@@ -23,7 +24,18 @@ function applyLang() {
   });
   $("langEn").classList.toggle("on", lang === "en");
   $("langId").classList.toggle("on", lang === "id");
+  renderMute();
 }
+
+function renderMute() {
+  $("muteBtn").textContent = isMuted() ? t("soundOff") : t("soundOn");
+  $("muteBtn").classList.toggle("off", isMuted());
+}
+$("muteBtn").addEventListener("click", () => {
+  setMuted(!isMuted());
+  renderMute();
+  sfx.click();
+});
 
 $("langEn").addEventListener("click", () => setLang("en"));
 $("langId").addEventListener("click", () => setLang("id"));
@@ -146,12 +158,15 @@ function noteJudgeSource(result) {
 }
 
 // ---- Home ------------------------------------------------------------------------
+// Invite links need a reachable host: on LAN hosts (localhost) use the
+// server's LAN address, otherwise the current origin (e.g. Vercel URL).
+let lanBase = location.origin;
 async function loadLan() {
   try {
     const net = await api("/api/network");
-    $("lanUrl").textContent = net.lan[0] || location.origin;
+    if (net.lan[0]) lanBase = net.lan[0];
   } catch {
-    $("lanUrl").textContent = location.origin;
+    /* location.origin fallback stands */
   }
 }
 
@@ -172,6 +187,7 @@ function homeError(msg) {
 }
 
 $("createBtn").addEventListener("click", async () => {
+  sfx.click();
   const name = $("name").value.trim();
   if (!name) return homeError(t("errName"));
   homeError("");
@@ -186,6 +202,7 @@ $("createBtn").addEventListener("click", async () => {
 });
 
 $("joinBtn").addEventListener("click", async () => {
+  sfx.click();
   const name = $("name").value.trim();
   const code = $("code").value.trim().toUpperCase();
   if (!name) return homeError(t("errName"));
@@ -243,7 +260,9 @@ $("leaveBtn1").addEventListener("click", leaveRoom);
 $("leaveBtn2").addEventListener("click", leaveRoom);
 
 async function poll() {
-  if (!session || document.hidden) return;
+  // No document.hidden skip: background tabs must keep up (transitions,
+  // presence, auto-submit), and throttled ~1/s polling is plenty.
+  if (!session) return;
   try {
     const state = await api(
       `/api/rooms/${session.code}/state?token=${encodeURIComponent(session.token)}`,
@@ -289,7 +308,7 @@ $("randomTopic").addEventListener("click", () => {
 });
 
 $("copyBtn").addEventListener("click", async () => {
-  const base = $("lanUrl").textContent !== "…" ? $("lanUrl").textContent : location.origin;
+  const base = isLocalHost() ? lanBase : location.origin;
   const link = `${base}/?room=${session.code}`;
   try {
     await navigator.clipboard.writeText(link);
@@ -303,6 +322,7 @@ $("copyBtn").addEventListener("click", async () => {
 });
 
 $("startBtn").addEventListener("click", async () => {
+  sfx.click();
   const topic = $("topic").value.trim();
   if (!topic) {
     $("lobbyErr").textContent = t("errTopic");
@@ -384,13 +404,26 @@ function renderLocalHp(state) {
   for (const id of ["hpbar", "hpbarWait", "hpbar2", "finalHp"]) $(id).innerHTML = html;
 }
 
+let lastTick = -1;
 function enterBattle(state) {
   battleRound = state.round;
+  lastTick = -1;
   localHp = [...state.hp];
+  sfx.bell();
   $("argument").value = "";
+  $("submitErr").classList.add("hidden");
+  updateCounter();
   if (stage) stage.resetStance();
   updateBattle(state);
 }
+
+function updateCounter() {
+  const len = $("argument").value.trim().length;
+  $("charCount").textContent = `${len} / ${MIN_CHARS}`;
+  $("submitBtn").disabled = len < MIN_CHARS;
+  if (len >= MIN_CHARS) $("submitErr").classList.add("hidden");
+}
+$("argument").addEventListener("input", updateCounter);
 
 function updateBattle(state) {
   // Runs on every poll: only touches text/status nodes, never the textarea.
@@ -424,6 +457,10 @@ function tickTimer(state) {
   const el = $("timer");
   el.textContent = left;
   el.classList.toggle("low", left <= 10);
+  if (left <= 5 && left > 0 && left !== lastTick) {
+    lastTick = left;
+    sfx.tick();
+  }
   if (left <= 0 && state.round !== autoSentRound && !state.submitted[state.you.side]) {
     autoSentRound = state.round;
     submitArgument(true);
@@ -437,17 +474,29 @@ let submitting = false;
 async function submitArgument(auto) {
   if (submitting || !session) return;
   const text = $("argument").value.trim();
-  if (!auto && text.length < MIN_CHARS) return;
+  if (!auto && text.length < MIN_CHARS) {
+    $("submitErr").textContent = t("tooShort");
+    $("submitErr").classList.remove("hidden");
+    return;
+  }
   submitting = true;
+  $("submitBtn").disabled = true;
+  if (!auto) $("submitBtn").textContent = t("sending");
   try {
     await api(`/api/rooms/${session.code}/submit`, {
       method: "POST",
       body: JSON.stringify({ token: session.token, text: text || "(…)" }),
     });
+    sfx.throwIt();
+    $("submitErr").classList.add("hidden");
   } catch {
-    // 409 round-over etc: next poll reconciles.
+    // 409 round-over etc: next poll reconciles, but say so out loud.
+    $("submitErr").textContent = t("errSend");
+    $("submitErr").classList.remove("hidden");
   } finally {
     submitting = false;
+    $("submitBtn").textContent = t("deliver");
+    updateCounter();
     poll();
   }
 }
@@ -554,6 +603,7 @@ function updateReady(state) {
 }
 
 $("readyBtn").addEventListener("click", async () => {
+  sfx.click();
   if (!session) return;
   try {
     await api(`/api/rooms/${session.code}/ready`, {
@@ -583,6 +633,7 @@ function renderEnd(state) {
 
 function showEnd(state) {
   renderEnd(state);
+  sfx.fanfare();
   const w = state.winner;
   if (stage) {
     (async () => {

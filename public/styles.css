@@ -89,6 +89,21 @@ body {
 }
 .lang-toggle button.on { background: var(--gold); color: var(--ink); }
 
+.mute-btn {
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--paper-dim);
+  border: 2px solid var(--paper-dim);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mute-btn.off { opacity: 0.55; }
+
 .divider {
   display: flex;
   align-items: center;
@@ -312,6 +327,15 @@ input:focus, textarea:focus, select:focus {
 .opp h3 { margin: 0 0 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .opp p { margin: 0; line-height: 1.55; white-space: pre-wrap; }
 
+.turn-feed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin: -0.4rem 0 0.8rem;
+}
+.turn-feed .hint { margin: 0; }
+.turn-feed .err { margin: 0; }
 .turn-foot {
   display: flex;
   justify-content: space-between;
