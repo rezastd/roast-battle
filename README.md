@@ -26,7 +26,7 @@ To use another port: `PORT=3101 npm start`.
 ## Deploy to Vercel
 
 The project root for the Vercel app is `debate-arena/` (it holds
-`package.json`, `public/`, `api/` and `vercel.json`).
+`package.json`, `public/` and the `server.js` entrypoint).
 
 1. Push this repo to GitHub.
 2. In Vercel: **Add New → Project → Import** the repo, set **Root Directory**
@@ -60,13 +60,13 @@ A real environment variable wins over `.env`, so
 
 ## How it works
 
-- `server.js` — Node server: static UI + room API (one optional dep).
+- `server.js` — Node server: static UI + room API. Also Vercel's server
+  entrypoint (default export), so local and deployed run the same code.
 - `netplay.js` — rooms (create/join/rejoin), simultaneous rounds,
   server-side deadlines, ready-ups, KO/sudden-death. Polled over plain HTTP.
   Every mutation runs under a per-room lock; stale locks/finalizes recover.
 - `store.js` — room storage: in-memory locally, Upstash Redis on Vercel
   (selected by env vars; the client is lazily imported).
-- `api/[...all].js` — Vercel serverless entry reusing the same handler.
 - `judge.js` — one System One call per argument with 8 parallel questions:
   4 × `Score` (wit, logic, savagery, relevance), 3 × `Noul`
   (crossed_line, dodged, low_effort), 1 × `Choice` (crowd reaction).

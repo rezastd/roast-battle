@@ -1,5 +1,0 @@
-{
-  "functions": {
-    "api/[...all].js": { "maxDuration": 30 }
-  }
-}

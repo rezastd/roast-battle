@@ -1,6 +1,7 @@
 // Debate Arena server: serves the game UI and judges arguments via Jev.
-// Zero dependencies; needs Node 20+. Set TYPESAFE_API_KEY for live judging,
-// otherwise the demo judge keeps the game playable.
+// Needs Node 20+. Set TYPESAFE_API_KEY for live judging, otherwise the demo
+// judge keeps the game playable. Runs two ways: `npm start` (local, long-lived)
+// or as Vercel's server entrypoint (default export below).
 
 import http from "node:http";
 import { readFile } from "node:fs/promises";
@@ -56,12 +57,22 @@ function asText(v, max) {
 }
 
 async function readJson(req, res) {
+  // Vercel pre-parses JSON bodies into req.body; locally we parse the stream.
+  if (req.body && typeof req.body === "object") return req.body;
+  let raw = "";
   try {
-    return JSON.parse(await readBody(req));
+    raw = await readBody(req);
   } catch {
-    send(res, 400, { error: "invalid JSON body" });
-    return null;
+    /* fall through to 400 below */
   }
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") return parsed;
+  } catch {
+    /* fall through to 400 below */
+  }
+  send(res, 400, { error: "invalid JSON body" });
+  return null;
 }
 
 async function serveStatic(reqPath, res) {
@@ -210,3 +221,8 @@ export function start(port = PORT) {
 
 const runDirectly = process.argv[1] === fileURLToPath(import.meta.url);
 if (runDirectly) start();
+
+// Vercel server entrypoint: every request lands here.
+export default async function handler(req, res) {
+  await handleRequest(req, res);
+}
