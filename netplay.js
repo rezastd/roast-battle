@@ -16,6 +16,10 @@ const AWAY_MS = 12000;
 const JUDGING_STALE_MS = 90 * 1000;
 const FORFEIT = "(no argument — time expired)";
 
+// Bound at import time on purpose: real env KV vars (Vercel) select Redis,
+// while `.env` loads later in server.js — so local runs stay on memory
+// (correct for one process, needs no install) even with KV vars in `.env`.
+// Export real KV vars to force Redis locally (then run `npm install` first).
 let store = getStore();
 export function setStore(s) {
   store = s;

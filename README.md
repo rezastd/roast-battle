@@ -42,8 +42,9 @@ The project root for the Vercel app is `debate-arena/` (it holds
    (without it, the demo judge runs).
 5. Redeploy. Play at `https://your-app.vercel.app` — no LAN needed.
 
-Local runs never need Redis or `npm install`: without KV env vars the server
-uses in-memory rooms, which is exactly right for one process.
+Local runs always use in-memory rooms (right for one process) and never
+need `npm install` — even with KV vars in `.env`. Only real exported KV env
+vars switch storage to Redis (Vercel sets those from its dashboard).
 
 ## Live Jev judging
 
