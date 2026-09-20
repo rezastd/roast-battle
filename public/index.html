@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Debate Arena — Roast Battle</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">DA</span>
+      <div>
+        <h1>Debate Arena</h1>
+        <p class="tagline" data-i18n="tagline"></p>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button id="langEn" type="button">EN</button>
+        <button id="langId" type="button">ID</button>
+      </div>
+      <div id="judgeBadge" class="badge">…</div>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- Home -->
+    <section id="screen-home" class="screen">
+      <h2 class="poster" data-i18n="mainEvent"></h2>
+      <div class="stage-slot"><div id="stageWrap" class="stage-wrap">
+        <canvas id="stage"></canvas>
+        <div id="stageFallback" class="stage-fallback hidden">3D arena unavailable — 2D mode.</div>
+      </div></div>
+      <div class="card">
+        <label class="field">
+          <span data-i18n="yourName"></span>
+          <input id="name" maxlength="24" autocomplete="off" />
+        </label>
+        <button id="createBtn" type="button" class="btn primary big" data-i18n="createRoom"></button>
+        <div class="divider"><span data-i18n="joinRoom"></span></div>
+        <div class="topic-row">
+          <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters"
+            data-i18n-ph="roomCode" />
+          <button id="joinBtn" type="button" class="btn" data-i18n="join"></button>
+        </div>
+        <button id="resumeBtn" type="button" class="btn ghost hidden"></button>
+        <p id="homeErr" class="err hidden"></p>
+        <p id="kvWarn" class="err hidden"></p>
+        <p class="hint"><span data-i18n="sameWifi"></span> <b id="lanUrl">…</b></p>
+      </div>
+      <div class="card rules">
+        <h3 data-i18n="howTitle"></h3>
+        <ul>
+          <li data-i18n="how1"></li>
+          <li data-i18n="how2"></li>
+          <li data-i18n="how3"></li>
+          <li data-i18n="how4"></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Lobby -->
+    <section id="screen-lobby" class="screen hidden">
+      <h2 class="poster small" data-i18n="lobbyTitle"></h2>
+      <div class="card center">
+        <p class="share-hint" data-i18n="shareCode"></p>
+        <div id="roomCode" class="room-code">––––</div>
+        <button id="copyBtn" type="button" class="btn ghost" data-i18n="copyLink"></button>
+        <div id="lobbyPlayers" class="lobby-players"></div>
+        <div id="hostTopicWrap" class="hidden">
+          <label class="field left">
+            <span data-i18n="topic"></span>
+            <div class="topic-row">
+              <input id="topic" maxlength="140" autocomplete="off" />
+              <button id="randomTopic" type="button" class="btn ghost" data-i18n="surprise"></button>
+            </div>
+          </label>
+          <button id="startBtn" type="button" class="btn primary big" data-i18n="start"></button>
+        </div>
+        <p id="guestTopic" class="topic-line hidden"></p>
+        <p id="lobbyStatus" class="hint"></p>
+        <p id="lobbyErr" class="err hidden"></p>
+        <button id="leaveBtn1" type="button" class="btn ghost" data-i18n="leaveRoom"></button>
+      </div>
+    </section>
+
+    <!-- Battle (simultaneous) -->
+    <section id="screen-battle" class="screen hidden">
+      <div class="stage-slot"></div>
+      <div id="hpbar" class="hpbar"></div>
+      <div id="dcBanner" class="dc-banner hidden"></div>
+      <div class="card">
+        <div class="turn-head">
+          <h2 id="battleTitle"></h2>
+          <div id="timer" class="timer">60</div>
+        </div>
+        <p class="topic-line"><b id="battleTopic"></b></p>
+        <div id="oppBox" class="opp hidden">
+          <h3 id="oppTitle"></h3>
+          <p id="oppText"></p>
+        </div>
+        <label class="field">
+          <span id="argLabel"></span>
+          <textarea id="argument" rows="6" maxlength="2000" data-i18n-ph="placeholder"></textarea>
+        </label>
+        <div class="turn-foot">
+          <span id="oppStatus" class="hint"></span>
+          <button id="submitBtn" type="button" class="btn primary big" data-i18n="deliver"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Waiting / judging -->
+    <section id="screen-wait" class="screen hidden">
+      <div class="stage-slot"></div>
+      <div id="hpbarWait" class="hpbar"></div>
+      <div class="card center">
+        <div class="gavel" aria-hidden="true">!</div>
+        <h2 id="waitTitle" class="poster small"></h2>
+        <p id="waitSub" class="hint"></p>
+      </div>
+    </section>
+
+    <!-- Round result -->
+    <section id="screen-round" class="screen hidden">
+      <div class="stage-slot"></div>
+      <div id="suddenBanner" class="dc-banner sudden hidden"></div>
+      <div id="hpbar2" class="hpbar"></div>
+      <h2 id="roundTitle" class="poster small"></h2>
+      <div id="roundCards" class="round-cards"></div>
+      <div class="center">
+        <button id="readyBtn" type="button" class="btn primary big"></button>
+        <button id="skipBtn" type="button" class="btn ghost hidden">Skip</button>
+      </div>
+      <p id="readyStatus" class="hint center"></p>
+    </section>
+
+    <!-- Match end -->
+    <section id="screen-over" class="screen hidden">
+      <div class="stage-slot"></div>
+      <div class="card center">
+        <p class="winner-kicker"><span data-i18n="winnerBy"></span> <span id="winMethod"></span></p>
+        <h2 id="winnerName" class="poster"></h2>
+        <div id="finalHp" class="hpbar"></div>
+        <div id="matchLog" class="match-log"></div>
+        <div id="hostRematchWrap">
+          <button id="rematchBtn" type="button" class="btn primary big" data-i18n="newMatch"></button>
+        </div>
+        <p id="guestRematchWait" class="hint hidden" data-i18n="rematchWaiting"></p>
+        <p><button id="leaveBtn2" type="button" class="btn ghost" data-i18n="leaveRoom"></button></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span data-i18n="foot"></span>
+  </footer>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

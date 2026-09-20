@@ -1,0 +1,16 @@
+{
+  "name": "debate-arena",
+  "version": "1.0.0",
+  "description": "Roast Battle: a 2-player hotseat debate game judged live by Jev (TypeSafe System One).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.3"
+  }
+}
