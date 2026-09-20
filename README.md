@@ -25,8 +25,6 @@ To use another port: `PORT=3101 npm start`.
 
 ## Deploy to Vercel
 
-Live at https://roast-battle-rezast.vercel.app (project `rezast/roast-battle`).
-
 The repo root is the app root (`package.json`, `public/`, `server.js`), so
 **Root Directory stays blank**. With the repo connected (Settings → Git),
 pushes to `main` auto-deploy to production. From a checkout you can also run
